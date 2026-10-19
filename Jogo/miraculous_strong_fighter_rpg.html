@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSF - Miraculous Strong Fighter</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ladybug: '#E63946',
+                        catnoir: '#2A9D8F',
+                        pegasus: '#457B9D',
+                        renarouge: '#F4A261',
+                        hawkmoth: '#6A0572',
+                        vesperia: '#E9C46A',
+                        darkbg: '#0B0F19',
+                        panelbg: 'rgba(23, 29, 45, 0.85)'
+                    },
+                    boxShadow: {
+                        'neon-red': '0 0 15px rgba(230, 57, 70, 0.6), 0 0 30px rgba(230, 57, 70, 0.3)',
+                        'neon-green': '0 0 15px rgba(42, 157, 143, 0.6), 0 0 30px rgba(42, 157, 143, 0.3)',
+                        'neon-purple': '0 0 15px rgba(106, 5, 114, 0.6), 0 0 30px rgba(106, 5, 114, 0.3)',
+                        'neon-yellow': '0 0 15px rgba(233, 196, 106, 0.6), 0 0 30px rgba(233, 196, 106, 0.3)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #080B12;
+            color: #F3F4F6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Glassmorphism elements */
+        .glass-panel {
+            background: rgba(18, 24, 38, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D3748;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4A5568;
+        }
+
+        /* Battle arena shaking */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-2px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-screen {
+            animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Character animation states */
+        .character-card {
+            transition: all 0.25s ease-in-out;
+        }
+        .character-card:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        /* Attack animation effects */
+        @keyframes attackP1 {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(80px) scale(1.1); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes attackP2 {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-80px) scale(1.1); }
+            100% { transform: translateX(0); }
+        }
+
+        .anim-attack-p1 {
+            animation: attackP1 0.4s ease-in-out;
+        }
+
+        .anim-attack-p2 {
+            animation: attackP2 0.4s ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.08); }
+        }
+
+        .aura-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        /* Status badge animations */
+        @keyframes badgePop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .status-badge {
+            animation: badgePop 0.25s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative bg-radial">
+
+    <!-- FX Overlay Canvas for Dynamic Particles & Floating Damage Text -->
+    <canvas id="fxCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- Header Navigation Bar -->
+    <header class="w-full px-6 py-4 glass-panel border-b border-gray-800 flex justify-between items-center z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-red-600 via-purple-600 to-indigo-600 flex items-center justify-center font-orbitron font-extrabold text-xl text-white shadow-lg">
+                MSF
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold text-xl md:text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-pink-400 to-indigo-400">
+                    MIRACULOUS STRONG FIGHTER
+                </h1>
+                <p class="text-xs text-gray-400 tracking-widest uppercase">Jogo de Luta em Turnos RPG</p>
+            </div>
+        </div>
+
+        <!-- Global Audio Control Button -->
+        <button id="soundToggleBtn" onclick="toggleAudio()" class="px-4 py-2 glass-panel rounded-xl flex items-center gap-2 hover:bg-gray-800 transition text-sm font-semibold text-gray-300">
+            <span id="soundIcon">🔊</span>
+            <span id="soundText">Som: LIGADO</span>
+        </button>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow flex items-center justify-center p-3 md:p-6 z-10">
+
+        <!-- ================= MODE SELECT SCREEN ================= -->
+        <section id="modeSelectScreen" class="w-full max-w-4xl glass-panel rounded-3xl p-6 md:p-10 shadow-2xl text-center space-y-8">
+            <div class="space-y-3">
+                <span class="px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-900/60 text-indigo-300 border border-indigo-500/30 tracking-widest uppercase">
+                    Universo Miraculous
+                </span>
+                <h2 class="text-3xl md:text-5xl font-orbitron font-black text-white uppercase tracking-tight">
+                    Escolha o Modo de Jogo
+                </h2>
+                <p class="text-gray-400 text-sm md:text-base max-w-xl mx-auto">
+                    Enfrente a Inteligência Artificial para treinar suas estratégias ou desafie um amigo em tempo real!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <!-- PvE Training Card -->
+                <div onclick="selectGameMode('pve')" class="character-card glass-panel rounded-2xl p-6 border-2 border-transparent hover:border-cyan-500/60 cursor-pointer flex flex-col justify-between items-center group relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all"></div>
+                    <div class="w-16 h-16 rounded-2xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-3xl mb-4 text-cyan-400 shadow-neon-green">
+                        🤖
+                    </div>
+                    <h3 class="text-2xl font-orbitron font-bold text-cyan-300 mb-2">PvE - Treino (vs IA)</h3>
+                    <p class="text-xs text-gray-400 text-center mb-6">Treine mecânicas e combos contra a Inteligência Artificial com diferentes níveis de dificuldade.</p>
+                    <span class="px-6 py-2 rounded-xl bg-cyan-600 text-white font-bold text-sm tracking-wide group-hover:bg-cyan-500 transition shadow-lg">
+                        MODO SOLO
+                    </span>
+                </div>
+
+                <!-- PvP Local 1v1 Card -->
+                <div onclick="selectGameMode('pvp')" class="character-card glass-panel rounded-2xl p-6 border-2 border-transparent hover:border-red-500/60 cursor-pointer flex flex-col justify-between items-center group relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
+                    <div class="w-16 h-16 rounded-2xl bg-red-950/80 border border-red-500/40 flex items-center justify-center text-3xl mb-4 text-red-400 shadow-neon-red">
+                        ⚔️
+                    </div>
+                    <h3 class="text-2xl font-orbitron font-bold text-red-400 mb-2">PvP Local 1x1</h3>
+                    <p class="text-xs text-gray-400 text-center mb-6">Desafie um amigo na mesma tela. Cada jogador escolhe seu guerreiro para um duelo de turnos!</p>
+                    <span class="px-6 py-2 rounded-xl bg-red-600 text-white font-bold text-sm tracking-wide group-hover:bg-red-500 transition shadow-lg">
+                        DUELO 1x1
+                    </span>
+                </div>
+            </div>
+
+            <!-- AI Difficulty Selection Group -->
+            <div id="aiDifficultyGroup" class="space-y-3 pt-4 border-t border-gray-800 max-w-xl mx-auto">
+                <label class="text-xs font-bold text-gray-400 tracking-wider uppercase block">Dificuldade da Inteligência Artificial (PvE):</label>
+                <div class="flex justify-center gap-3">
+                    <button onclick="setAIDifficulty('easy')" id="diff-easy" class="px-4 py-2 rounded-xl text-xs font-bold bg-green-950 border border-green-600/40 text-green-300 hover:bg-green-900 transition">Fácil</button>
+                    <button onclick="setAIDifficulty('medium')" id="diff-medium" class="px-4 py-2 rounded-xl text-xs font-bold bg-yellow-950 border border-yellow-500/80 text-yellow-300 hover:bg-yellow-900 transition ring-2 ring-yellow-400">Média</button>
+                    <button onclick="setAIDifficulty('hard')" id="diff-hard" class="px-4 py-2 rounded-xl text-xs font-bold bg-red-950 border border-red-600/40 text-red-300 hover:bg-red-900 transition">Difícil</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= CHARACTER SELECTION SCREEN ================= -->
+        <section id="charSelectScreen" class="hidden w-full max-w-6xl glass-panel rounded-3xl p-4 md:p-8 shadow-2xl flex-col gap-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-800 pb-4">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-orbitron font-black text-white flex items-center gap-3">
+                        <span id="selectionTitlePrefix" class="text-red-500">JOGADOR 1</span>
+                        <span>- ESCOLHA SEU PERSONAGEM</span>
+                    </h2>
+                    <p id="selectionSubTitle" class="text-xs md:text-sm text-gray-400">Selecione um guerreiro miraculous para entrar em combate.</p>
+                </div>
+                <button onclick="backToModeSelect()" class="px-4 py-2 text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition">
+                    ← Voltar ao Menu
+                </button>
+            </div>
+
+            <!-- Character Roster Grid & Detail Preview Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Roster Cards -->
+                <div class="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-3" id="rosterGrid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+
+                <!-- Preview Selected Character Details -->
+                <div id="charDetailPanel" class="lg:col-span-5 glass-panel rounded-2xl p-5 border border-indigo-500/30 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center gap-4 border-b border-gray-800 pb-4">
+                        <div id="previewAvatar" class="w-16 h-16 rounded-2xl bg-gray-900 border border-gray-700 flex items-center justify-center p-2">
+                            <!-- SVG Avatar populated by JS -->
+                        </div>
+                        <div>
+                            <h3 id="previewName" class="text-2xl font-orbitron font-extrabold text-white">LadyBug</h3>
+                            <span id="previewRole" class="text-xs px-2 py-0.5 rounded bg-red-950 text-red-400 font-semibold border border-red-800">Equilibrado</span>
+                        </div>
+                    </div>
+
+                    <!-- Stats Bars -->
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <div class="flex justify-between text-gray-300 font-semibold mb-1">
+                                <span>VIDA (HP)</span>
+                                <span id="previewHpVal" class="text-green-400">1000</span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                                <div id="previewHpBar" class="h-full bg-green-500 transition-all" style="width: 80%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                                <span class="text-gray-400 block text-[10px]">DEFESA / ARMADURA</span>
+                                <span id="previewDefVal" class="font-bold text-indigo-300 text-sm">120</span>
+                            </div>
+                            <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                                <span class="text-gray-400 block text-[10px]">VELOCIDADE (INICIATIVA)</span>
+                                <span id="previewSpdVal" class="font-bold text-yellow-300 text-sm">85</span>
+                            </div>
+                            <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                                <span class="text-gray-400 block text-[10px]">PRECISÃO (ACERTO)</span>
+                                <span id="previewAccVal" class="font-bold text-cyan-300 text-sm">90%</span>
+                            </div>
+                            <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                                <span class="text-gray-400 block text-[10px]">CHANCE DE CRÍTICO</span>
+                                <span id="previewCritVal" class="font-bold text-red-400 text-sm">15%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Moveset List Preview -->
+                    <div class="space-y-2 border-t border-gray-800 pt-3">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Ataques & Habilidades:</h4>
+                        <div class="space-y-1.5 text-xs" id="previewMovesList">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Confirm Pick Button -->
+                    <button id="confirmPickBtn" onclick="confirmCharacterSelection()" class="w-full py-3 rounded-xl font-orbitron font-black text-sm tracking-widest text-white bg-gradient-to-r from-red-600 to-indigo-600 hover:from-red-500 hover:to-indigo-500 shadow-lg transition active:scale-95">
+                        CONFIRMAR SELEÇÃO
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= BATTLE ARENA SCREEN ================= -->
+        <section id="battleArenaScreen" class="hidden w-full max-w-6xl flex-col gap-4">
+            
+            <!-- Top Combat Status Bar -->
+            <div class="glass-panel rounded-2xl p-3 md:p-4 border border-gray-800 flex justify-between items-center text-xs md:text-sm font-bold">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+                    <span id="turnIndicatorText" class="font-orbitron text-gray-200 uppercase tracking-wider">TURNO DO JOGADOR 1</span>
+                </div>
+                <div class="text-gray-400 font-mono">
+                    RODADA <span id="roundCounter" class="text-white text-base font-bold">1</span>
+                </div>
+            </div>
+
+            <!-- Battlefield Fighter Cards Viewport -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 my-2 relative">
+                
+                <!-- Player 1 Fighter Card -->
+                <div id="p1Card" class="glass-panel rounded-3xl p-5 border-2 border-red-500/40 relative overflow-hidden transition-all duration-300">
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-red-400 tracking-widest block">JOGADOR 1</span>
+                            <h3 id="p1Name" class="text-xl md:text-2xl font-orbitron font-extrabold text-white">LadyBug</h3>
+                        </div>
+                        <div id="p1Badges" class="flex flex-wrap gap-1 justify-end">
+                            <!-- Status effect badges injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Health Bar P1 -->
+                    <div class="space-y-1 mb-4">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-gray-400">VIDA</span>
+                            <span id="p1HpText" class="text-green-400 font-mono font-bold">1000 / 1000</span>
+                        </div>
+                        <div class="w-full h-4 bg-gray-900 rounded-full border border-gray-700/80 p-0.5 overflow-hidden">
+                            <div id="p1HpBar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Character Animated Visual Box -->
+                    <div class="relative w-full h-44 md:h-52 bg-slate-900/60 rounded-2xl border border-gray-800 flex items-center justify-center overflow-hidden my-2">
+                        <div id="p1Aura" class="absolute inset-0 aura-glow opacity-20 pointer-events-none bg-red-500/30 rounded-full blur-xl"></div>
+                        <div id="p1SpriteContainer" class="w-32 h-32 md:w-36 md:h-36 transition-transform duration-200">
+                            <!-- SVG Hero P1 -->
+                        </div>
+                    </div>
+
+                    <!-- Stat Indicators -->
+                    <div class="grid grid-cols-3 gap-2 text-[11px] text-center pt-2 border-t border-gray-800/80">
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">DEFESA</span>
+                            <span id="p1DefVal" class="font-bold text-indigo-300">120</span>
+                        </div>
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">VELOCIDADE</span>
+                            <span id="p1SpdVal" class="font-bold text-yellow-300">85</span>
+                        </div>
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">CRÍTICO</span>
+                            <span id="p1CritVal" class="font-bold text-red-300">15%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player 2 / AI Fighter Card -->
+                <div id="p2Card" class="glass-panel rounded-3xl p-5 border-2 border-indigo-500/40 relative overflow-hidden transition-all duration-300">
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                        <div class="text-right w-full">
+                            <span id="p2TagLabel" class="text-[10px] uppercase font-bold text-indigo-400 tracking-widest block">JOGADOR 2</span>
+                            <h3 id="p2Name" class="text-xl md:text-2xl font-orbitron font-extrabold text-white">Cat Noir</h3>
+                        </div>
+                        <div id="p2Badges" class="flex flex-wrap gap-1 justify-end">
+                            <!-- Status effect badges injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Health Bar P2 -->
+                    <div class="space-y-1 mb-4">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-gray-400">VIDA</span>
+                            <span id="p2HpText" class="text-green-400 font-mono font-bold">950 / 950</span>
+                        </div>
+                        <div class="w-full h-4 bg-gray-900 rounded-full border border-gray-700/80 p-0.5 overflow-hidden">
+                            <div id="p2HpBar" class="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Character Animated Visual Box -->
+                    <div class="relative w-full h-44 md:h-52 bg-slate-900/60 rounded-2xl border border-gray-800 flex items-center justify-center overflow-hidden my-2">
+                        <div id="p2Aura" class="absolute inset-0 aura-glow opacity-20 pointer-events-none bg-indigo-500/30 rounded-full blur-xl"></div>
+                        <div id="p2SpriteContainer" class="w-32 h-32 md:w-36 md:h-36 transition-transform duration-200">
+                            <!-- SVG Hero P2 -->
+                        </div>
+                    </div>
+
+                    <!-- Stat Indicators -->
+                    <div class="grid grid-cols-3 gap-2 text-[11px] text-center pt-2 border-t border-gray-800/80">
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">DEFESA</span>
+                            <span id="p2DefVal" class="font-bold text-indigo-300">100</span>
+                        </div>
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">VELOCIDADE</span>
+                            <span id="p2SpdVal" class="font-bold text-yellow-300">90</span>
+                        </div>
+                        <div class="bg-gray-900/40 py-1.5 rounded-lg border border-gray-800">
+                            <span class="text-gray-400 block text-[9px]">CRÍTICO</span>
+                            <span id="p2CritVal" class="font-bold text-red-300">25%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Command Panel & Combat Log -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                
+                <!-- Action Buttons (8 cols) -->
+                <div class="lg:col-span-8 glass-panel rounded-2xl p-4 border border-gray-800 flex flex-col justify-between space-y-3">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span id="activeTurnLabel" class="text-xs font-orbitron font-bold text-red-400 uppercase tracking-widest">
+                            PAINEL DE COMANDO DE ATAQUES
+                        </span>
+                        <span class="text-[10px] text-gray-400">Escolha o ataque estratégico</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="attackButtonsGroup">
+                        <!-- Attack 1: Basic -->
+                        <button id="btnBasicAttack" onclick="performAttack('basic')" class="p-3 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 border border-gray-700 hover:border-gray-500 flex flex-col justify-between text-left transition transform active:scale-95 group">
+                            <div>
+                                <span class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Ataque Básico</span>
+                                <h4 id="moveNameBasic" class="font-orbitron font-bold text-sm text-white group-hover:text-cyan-300">Arremesso Yoyo</h4>
+                            </div>
+                            <span id="moveDescBasic" class="text-[11px] text-gray-400 mt-2 block">Ataque direto rápido de média distância.</span>
+                        </button>
+
+                        <!-- Attack 2: Alternative -->
+                        <button id="btnAltAttack" onclick="performAttack('alt')" class="p-3 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 border border-gray-700 hover:border-amber-500/50 flex flex-col justify-between text-left transition transform active:scale-95 group relative">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Ataque Alternativo</span>
+                                    <span id="altCdBadge" class="text-[9px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 hidden">CD: 2</span>
+                                </div>
+                                <h4 id="moveNameAlt" class="font-orbitron font-bold text-sm text-white group-hover:text-amber-300">Prender com Yoyo</h4>
+                            </div>
+                            <span id="moveDescAlt" class="text-[11px] text-gray-400 mt-2 block">Dano moderado + paralisa o inimigo por 1 turno.</span>
+                        </button>
+
+                        <!-- Attack 3: Special -->
+                        <button id="btnSpecAttack" onclick="performAttack('special')" class="p-3 rounded-xl bg-gradient-to-b from-purple-900/60 to-gray-900 hover:from-purple-800/80 hover:to-gray-800 border border-purple-500/40 hover:border-purple-400 flex flex-col justify-between text-left transition transform active:scale-95 group relative">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Ataque Especial</span>
+                                    <span id="specCdBadge" class="text-[9px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 hidden">CD: 3</span>
+                                </div>
+                                <h4 id="moveNameSpec" class="font-orbitron font-bold text-sm text-white group-hover:text-purple-300">Miraculous</h4>
+                            </div>
+                            <span id="moveDescSpec" class="text-[11px] text-gray-300 mt-2 block">Poder máximo do Miraculous!</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Battle Combat Log (4 cols) -->
+                <div class="lg:col-span-4 glass-panel rounded-2xl p-3 border border-gray-800 flex flex-col justify-between">
+                    <span class="text-xs font-orbitron font-bold text-gray-400 uppercase tracking-wider border-b border-gray-800 pb-1 mb-2 block">
+                        📜 Histórico de Combate
+                    </span>
+                    <div id="battleLog" class="h-28 overflow-y-auto space-y-1.5 text-xs text-gray-300 pr-1">
+                        <div class="text-gray-500 italic">O duelo vai começar! Quem fará o primeiro movimento?</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= VICTORY MODAL ================= -->
+    <div id="victoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-md w-full rounded-3xl p-6 md:p-8 border-2 border-indigo-500 text-center space-y-6 shadow-neon-purple animate-bounce-short">
+            <div id="victoryTrophy" class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-yellow-500 to-amber-300 flex items-center justify-center text-4xl shadow-lg">
+                🏆
+            </div>
+            
+            <div class="space-y-2">
+                <span id="victorySubtitle" class="text-xs font-bold text-indigo-400 uppercase tracking-widest block">VITÓRIA ÉPICA</span>
+                <h2 id="victoryTitle" class="text-3xl font-orbitron font-black text-white">LADYBUG VENCEU!</h2>
+                <p id="victoryDesc" class="text-xs text-gray-300">A batalha do universo MSF foi concluída com maestria.</p>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="restartBattle()" class="flex-1 py-3 rounded-xl font-orbitron font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg">
+                    REVANCHE
+                </button>
+                <button onclick="backToModeSelect()" class="flex-1 py-3 rounded-xl font-orbitron font-bold text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 transition">
+                    MENU PRINCIPAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT GAME ENGINE ================= -->
+    <script>
+        /* ================= AUDIO SYNTHESIZER (Web Audio API) ================= */
+        let audioEnabled = true;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btnText = document.getElementById('soundText');
+            const btnIcon = document.getElementById('soundIcon');
+            if (audioEnabled) {
+                btnText.innerText = "Som: LIGADO";
+                btnIcon.innerText = "🔊";
+            } else {
+                btnText.innerText = "Som: DESLIGADO";
+                btnIcon.innerText = "🔇";
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'hit') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'crit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+                    gain.gain.setValueAtTime(0.7, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'magic') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'cataclysm') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.5);
+                    gain.gain.setValueAtTime(0.8, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'victory') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(400, now + 0.1);
+                    osc.frequency.setValueAtTime(600, now + 0.2);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                }
+            } catch (e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        /* ================= SVG HERO AVATARS DATA ================= */
+        const HERO_SVGS = {
+            ladybug: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#E63946" stroke="#111" stroke-width="4"/>
+                    <circle cx="35" cy="35" r="8" fill="#111"/>
+                    <circle cx="65" cy="35" r="8" fill="#111"/>
+                    <circle cx="50" cy="65" r="9" fill="#111"/>
+                    <circle cx="25" cy="60" r="7" fill="#111"/>
+                    <circle cx="75" cy="60" r="7" fill="#111"/>
+                    <path d="M 30 45 Q 50 30 70 45" fill="none" stroke="#111" stroke-width="6"/>
+                    <circle cx="42" cy="42" r="3" fill="#FFF"/>
+                    <circle cx="58" cy="42" r="3" fill="#FFF"/>
+                </svg>
+            `,
+            catnoir: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#1E293B" stroke="#2A9D8F" stroke-width="4"/>
+                    <polygon points="25,25 15,5 38,18" fill="#1E293B" stroke="#2A9D8F" stroke-width="3"/>
+                    <polygon points="75,25 85,5 62,18" fill="#1E293B" stroke="#2A9D8F" stroke-width="3"/>
+                    <path d="M 25 40 Q 50 35 75 40 Q 75 55 50 55 Q 25 55 25 40 Z" fill="#0F172A"/>
+                    <ellipse cx="38" cy="46" rx="6" ry="8" fill="#2A9D8F"/>
+                    <ellipse cx="62" cy="46" rx="6" ry="8" fill="#2A9D8F"/>
+                    <circle cx="50" cy="72" r="6" fill="#F4A261"/>
+                </svg>
+            `,
+            pegasus: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#1E1B4B" stroke="#457B9D" stroke-width="4"/>
+                    <rect x="25" y="38" width="50" height="18" rx="6" fill="#457B9D" stroke="#E0E7FF" stroke-width="2"/>
+                    <circle cx="38" cy="47" r="5" fill="#60A5FA"/>
+                    <circle cx="62" cy="47" r="5" fill="#60A5FA"/>
+                    <path d="M 30 68 Q 50 78 70 68" fill="none" stroke="#60A5FA" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="20" r="6" fill="#818CF8"/>
+                </svg>
+            `,
+            renarouge: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#F4A261" stroke="#C2410C" stroke-width="4"/>
+                    <polygon points="22,25 10,2 35,16" fill="#C2410C"/>
+                    <polygon points="78,25 90,2 65,16" fill="#C2410C"/>
+                    <path d="M 28 42 Q 50 38 72 42 Q 65 62 50 62 Q 35 62 28 42 Z" fill="#FFF"/>
+                    <ellipse cx="38" cy="48" rx="5" ry="7" fill="#C2410C"/>
+                    <ellipse cx="62" cy="48" rx="5" ry="7" fill="#C2410C"/>
+                </svg>
+            `,
+            hawkmoth: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#3B0764" stroke="#A855F7" stroke-width="4"/>
+                    <path d="M 20 50 Q 50 20 80 50 Q 50 80 20 50 Z" fill="#581C87" stroke="#C084FC" stroke-width="3"/>
+                    <ellipse cx="38" cy="50" rx="5" ry="7" fill="#F0ABFC"/>
+                    <ellipse cx="62" cy="50" rx="5" ry="7" fill="#F0ABFC"/>
+                    <polygon points="50,30 45,42 55,42" fill="#C084FC"/>
+                </svg>
+            `,
+            vesperia: `
+                <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                    <circle cx="50" cy="50" r="42" fill="#E9C46A" stroke="#854D0E" stroke-width="4"/>
+                    <path d="M 15 35 H 85 V 45 H 15 Z" fill="#1E293B"/>
+                    <path d="M 20 60 H 80 V 70 H 20 Z" fill="#1E293B"/>
+                    <circle cx="38" cy="40" r="6" fill="#FACC15"/>
+                    <circle cx="62" cy="40" r="6" fill="#FACC15"/>
+                    <polygon points="50,75 42,92 58,92" fill="#1E293B"/>
+                </svg>
+            `
+        };
+
+        /* ================= GAME CHARACTERS DATA & MOVES ================= */
+        const CHARACTERS = {
+            ladybug: {
+                id: 'ladybug',
+                name: 'LadyBug',
+                role: 'Equilibrada / Buff',
+                maxHp: 1000,
+                acc: 90,
+                def: 120,
+                spd: 85,
+                crit: 15,
+                color: '#E63946',
+                moves: {
+                    basic: { name: 'Arremesso de Yoyô', dmg: 120, desc: 'Ataque rápido de média distância com yoyô.', type: 'damage' },
+                    alt: { name: 'Prender com Yoyô', dmg: 150, desc: 'Prende o inimigo por 1 turno + sequência de socos.', cd: 3, stun: 1 },
+                    special: { name: 'Miraculous', dmg: 0, desc: 'Sorte Grande! Fornece +60% de dano bônus por 3 turnos.', cd: 4, buff: { type: 'attack', amount: 0.6, turns: 3 } }
+                }
+            },
+            catnoir: {
+                id: 'catnoir',
+                name: 'Cat Noir',
+                role: 'Dano Crítico Alto',
+                maxHp: 950,
+                acc: 85,
+                def: 100,
+                spd: 90,
+                crit: 25,
+                color: '#2A9D8F',
+                moves: {
+                    basic: { name: 'Garras Felinas', dmg: 130, desc: 'Golpe visceral de curta distância com garras.', type: 'damage' },
+                    alt: { name: 'Bastão do Gato', dmg: 160, desc: 'Ataque flexível estendendo o bastão metálico.', cd: 2 },
+                    special: { name: 'Cataclismo', dmg: 'special_cataclysm', desc: 'Destruição pura! Arranca 50% da vida MÁXIMA do oponente.', cd: 5 }
+                }
+            },
+            pegasus: {
+                id: 'pegasus',
+                name: 'Pegasus',
+                role: 'Velocidade & Perfuração',
+                maxHp: 900,
+                acc: 92,
+                def: 90,
+                spd: 95,
+                crit: 18,
+                color: '#457B9D',
+                moves: {
+                    basic: { name: 'Soco Portal', dmg: 115, desc: 'Soco dimensional de longa distância via portal.', type: 'damage' },
+                    alt: { name: 'Teleporte', dmg: 170, desc: 'Ataca no ponto cego ignorando 50% da defesa inimiga.', cd: 3, bypassDef: 0.5 },
+                    special: { name: 'Multi-Portais', dmg: 'special_multi', desc: 'Desfere de 4 a 6 socos multidimensionais imprevisíveis.', cd: 4 }
+                }
+            },
+            renarouge: {
+                id: 'renarouge',
+                name: 'Rena Rouge',
+                role: 'Ilusão & Evasão',
+                maxHp: 920,
+                acc: 88,
+                def: 95,
+                spd: 88,
+                crit: 20,
+                color: '#F4A261',
+                moves: {
+                    basic: { name: 'Soco Miragem', dmg: 125, desc: 'Miragem lateral que acerta um golpe surpresa.', type: 'damage' },
+                    alt: { name: 'Clone Falso', dmg: 0, desc: 'Cria ilusão: absorve/redireciona o próximo ataque inimigo.', cd: 3, decoy: true },
+                    special: { name: 'Exército de Clones', dmg: 320, desc: 'Invoca 3 clones e ataca simultaneamente.', cd: 4 }
+                }
+            },
+            hawkmoth: {
+                id: 'hawkmoth',
+                name: 'Hawk Moth',
+                role: 'Controle & Tanque',
+                maxHp: 1100,
+                acc: 85,
+                def: 130,
+                spd: 75,
+                crit: 12,
+                color: '#6A0572',
+                moves: {
+                    basic: { name: 'Golpe de Cajado', dmg: 110, desc: 'Golpe físico pesado de média distância.', type: 'damage' },
+                    alt: { name: 'Bola de Akuma', dmg: 140, desc: 'Orb sombria com 60% de chance de atordoar.', cd: 3, stunChance: 0.6 },
+                    special: { name: 'Akumatizado', dmg: 0, desc: 'Invoca um servo por 2 turnos (+50% de ataque e dano extra ao fim do turno).', cd: 4, akumaBuff: 2 }
+                }
+            },
+            vesperia: {
+                id: 'vesperia',
+                name: 'Vesperia',
+                role: 'Debuff & Dano Fixo',
+                maxHp: 980,
+                acc: 89,
+                def: 110,
+                spd: 82,
+                crit: 22,
+                color: '#E9C46A',
+                moves: {
+                    basic: { name: 'Soco de Ferrão', dmg: 135, desc: 'Soco perfurante energizado com ferrão.', type: 'damage' },
+                    alt: { name: 'Disparos de Mel', dmg: 120, desc: 'Mel pegajoso que diminui Vel e Def do inimigo em 30% por 2 turnos.', cd: 3, slow: 2 },
+                    special: { name: 'Colmeia', dmg: 'special_hive', desc: 'Enxame fulminante que causa exatamente 33.3% da vida total do adversário.', cd: 4 }
+                }
+            }
+        };
+
+        /* ================= GAME STATE VARIABLES ================= */
+        let gameMode = 'pvp'; // 'pvp' or 'pve'
+        let aiDifficulty = 'medium'; // 'easy', 'medium', 'hard'
+        let selectingPlayer = 1; // 1 or 2
+        let p1SelectedId = 'ladybug';
+        let p2SelectedId = 'catnoir';
+
+        // Robust player state array (Index 0 = P1, Index 1 = P2/AI)
+        let players = [{}, {}];
+        let currentTurnIndex = 0; // 0 or 1
+        let roundCount = 1;
+        let isAnimating = false;
+        let turnTimer = null;
+
+        /* ================= INITIALIZATION & NAVIGATION ================= */
+        window.onload = function() {
+            renderRosterGrid();
+            selectPreviewChar('ladybug');
+            setupCanvas();
+            window.addEventListener('resize', setupCanvas);
+        };
+
+        function selectGameMode(mode) {
+            gameMode = mode;
+            document.getElementById('modeSelectScreen').classList.add('hidden');
+            document.getElementById('charSelectScreen').classList.remove('hidden');
+            
+            selectingPlayer = 1;
+            updateSelectionHeader();
+        }
+
+        function setAIDifficulty(diff) {
+            aiDifficulty = diff;
+            ['easy', 'medium', 'hard'].forEach(d => {
+                const btn = document.getElementById(`diff-${d}`);
+                if (d === diff) {
+                    btn.classList.add('border-2', 'ring-2', 'ring-yellow-400');
+                } else {
+                    btn.classList.remove('border-2', 'ring-2', 'ring-yellow-400');
+                }
+            });
+        }
+
+        function backToModeSelect() {
+            if (turnTimer) clearTimeout(turnTimer);
+            document.getElementById('charSelectScreen').classList.add('hidden');
+            document.getElementById('battleArenaScreen').classList.add('hidden');
+            document.getElementById('victoryModal').classList.add('hidden');
+            document.getElementById('modeSelectScreen').classList.remove('hidden');
+            isAnimating = false;
+        }
+
+        function updateSelectionHeader() {
+            const prefix = document.getElementById('selectionTitlePrefix');
+            const sub = document.getElementById('selectionSubTitle');
+            if (gameMode === 'pvp') {
+                if (selectingPlayer === 1) {
+                    prefix.innerText = "JOGADOR 1";
+                    prefix.className = "text-red-500 font-orbitron font-extrabold";
+                    sub.innerText = "Selecione o herói para o Jogador 1.";
+                } else {
+                    prefix.innerText = "JOGADOR 2";
+                    prefix.className = "text-indigo-400 font-orbitron font-extrabold";
+                    sub.innerText = "Selecione o herói para o Jogador 2.";
+                }
+            } else {
+                prefix.innerText = "JOGADOR";
+                prefix.className = "text-cyan-400 font-orbitron font-extrabold";
+                sub.innerText = "Escolha seu guerreiro para enfrentar o bot da IA.";
+            }
+        }
+
+        /* ================= ROSTER SELECTION RENDER ================= */
+        function renderRosterGrid() {
+            const grid = document.getElementById('rosterGrid');
+            grid.innerHTML = '';
+
+            Object.keys(CHARACTERS).forEach(key => {
+                const c = CHARACTERS[key];
+                const card = document.createElement('div');
+                card.className = `character-card glass-panel rounded-2xl p-3 border-2 border-gray-800 hover:border-gray-500 cursor-pointer flex flex-col items-center justify-center text-center relative overflow-hidden`;
+                card.onclick = () => selectPreviewChar(key);
+                card.id = `roster-card-${key}`;
+
+                card.innerHTML = `
+                    <div class="w-14 h-14 rounded-xl bg-gray-900 border border-gray-700 p-1 mb-2">
+                        ${HERO_SVGS[key]}
+                    </div>
+                    <h4 class="font-orbitron font-bold text-xs text-white">${c.name}</h4>
+                    <span class="text-[10px] text-gray-400">${c.role}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        let currentlyPreviewedKey = 'ladybug';
+
+        function selectPreviewChar(key) {
+            currentlyPreviewedKey = key;
+            const c = CHARACTERS[key];
+
+            Object.keys(CHARACTERS).forEach(k => {
+                const el = document.getElementById(`roster-card-${k}`);
+                if (el) {
+                    if (k === key) {
+                        el.classList.add('border-indigo-500', 'bg-indigo-950/30');
+                    } else {
+                        el.classList.remove('border-indigo-500', 'bg-indigo-950/30');
+                    }
+                }
+            });
+
+            document.getElementById('previewAvatar').innerHTML = HERO_SVGS[key];
+            document.getElementById('previewName').innerText = c.name;
+            document.getElementById('previewRole').innerText = c.role;
+            document.getElementById('previewHpVal').innerText = c.maxHp;
+            document.getElementById('previewHpBar').style.width = `${(c.maxHp / 1100) * 100}%`;
+            document.getElementById('previewDefVal').innerText = c.def;
+            document.getElementById('previewSpdVal').innerText = c.spd;
+            document.getElementById('previewAccVal').innerText = c.acc + '%';
+            document.getElementById('previewCritVal').innerText = c.crit + '%';
+
+            const movesContainer = document.getElementById('previewMovesList');
+            movesContainer.innerHTML = `
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800/80">
+                    <span class="font-bold text-cyan-300">Básico: ${c.moves.basic.name}</span>
+                    <p class="text-gray-400 text-[10px]">${c.moves.basic.desc}</p>
+                </div>
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800/80">
+                    <span class="font-bold text-amber-300">Alternativo: ${c.moves.alt.name}</span>
+                    <p class="text-gray-400 text-[10px]">${c.moves.alt.desc}</p>
+                </div>
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800/80">
+                    <span class="font-bold text-purple-300">Especial: ${c.moves.special.name}</span>
+                    <p class="text-gray-400 text-[10px]">${c.moves.special.desc}</p>
+                </div>
+            `;
+        }
+
+        function confirmCharacterSelection() {
+            if (selectingPlayer === 1) {
+                p1SelectedId = currentlyPreviewedKey;
+                if (gameMode === 'pvp') {
+                    selectingPlayer = 2;
+                    updateSelectionHeader();
+                    const otherKey = p1SelectedId === 'catnoir' ? 'ladybug' : 'catnoir';
+                    selectPreviewChar(otherKey);
+                } else {
+                    const keys = Object.keys(CHARACTERS);
+                    let aiKey = keys[Math.floor(Math.random() * keys.length)];
+                    p2SelectedId = aiKey;
+                    startBattle();
+                }
+            } else {
+                p2SelectedId = currentlyPreviewedKey;
+                startBattle();
+            }
+        }
+
+        /* ================= BATTLE ENGINE & STATE SETUP ================= */
+        function createPlayerState(charId, index) {
+            const c = CHARACTERS[charId];
+            return {
+                index: index, // 0 for P1, 1 for P2
+                id: c.id,
+                name: c.name,
+                maxHp: c.maxHp,
+                hp: c.maxHp,
+                acc: c.acc,
+                def: c.def,
+                baseDef: c.def,
+                spd: c.spd,
+                baseSpd: c.spd,
+                crit: c.crit,
+                altCd: 0,
+                specCd: 0,
+                stunnedTurns: 0,
+                buffs: {
+                    atkBonus: 0,
+                    atkTurns: 0,
+                    decoy: false,
+                    akumaTurns: 0,
+                    slowTurns: 0
+                }
+            };
+        }
+
+        function startBattle() {
+            if (turnTimer) clearTimeout(turnTimer);
+            document.getElementById('charSelectScreen').classList.add('hidden');
+            document.getElementById('battleArenaScreen').classList.remove('hidden');
+
+            players[0] = createPlayerState(p1SelectedId, 0);
+            players[1] = createPlayerState(p2SelectedId, 1);
+
+            roundCount = 1;
+            isAnimating = false;
+            document.getElementById('roundCounter').innerText = roundCount;
+            document.getElementById('battleLog').innerHTML = '';
+
+            // Setup display labels & avatars
+            document.getElementById('p1Name').innerText = players[0].name;
+            document.getElementById('p2Name').innerText = players[1].name;
+            document.getElementById('p1SpriteContainer').innerHTML = HERO_SVGS[players[0].id];
+            document.getElementById('p2SpriteContainer').innerHTML = HERO_SVGS[players[1].id];
+
+            document.getElementById('p2TagLabel').innerText = gameMode === 'pve' ? `BOT IA (${aiDifficulty.toUpperCase()})` : 'JOGADOR 2';
+
+            // Speed check for initiative (ties broken by coin toss)
+            if (players[0].spd > players[1].spd) {
+                currentTurnIndex = 0;
+            } else if (players[1].spd > players[0].spd) {
+                currentTurnIndex = 1;
+            } else {
+                currentTurnIndex = Math.random() < 0.5 ? 0 : 1;
+            }
+
+            logBattle(`⚔️ **${players[currentTurnIndex].name}** iniciou com maior velocidade/iniciativa e ganha o 1º turno!`);
+
+            // Start first turn
+            startTurn();
+        }
+
+        function restartBattle() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            startBattle();
+        }
+
+        /* ================= TURN LIFECYCLE CONTROLLER ================= */
+        function startTurn() {
+            const current = players[currentTurnIndex];
+            const opponent = players[1 - currentTurnIndex];
+
+            // Decrement Cooldowns at start of actor's turn
+            if (current.altCd > 0) current.altCd--;
+            if (current.specCd > 0) current.specCd--;
+
+            // Handle Akuma Servant Damage at start of turn
+            if (current.buffs.akumaTurns > 0) {
+                const akumaDmg = 50;
+                opponent.hp = Math.max(0, opponent.hp - akumaDmg);
+                logBattle(`😈 O servo Akumatizado de **${current.name}** atacou **${opponent.name}** (-${akumaDmg} HP)!`);
+                spawnFloatingText(`-${akumaDmg}`, 1 - currentTurnIndex, '#A855F7');
+
+                current.buffs.akumaTurns--;
+                if (current.buffs.akumaTurns === 0) {
+                    current.buffs.atkBonus = 0;
+                    logBattle(`😈 O servo Akumatizado de **${current.name}** se dissipou.`);
+                }
+
+                if (opponent.hp <= 0) {
+                    updateUI();
+                    showVictory(current);
+                    return;
+                }
+            }
+
+            // Decrement Miraculous Attack Buff
+            if (current.buffs.atkTurns > 0) {
+                current.buffs.atkTurns--;
+                if (current.buffs.atkTurns === 0) {
+                    current.buffs.atkBonus = 0;
+                    logBattle(`✨ O bônus do Miraculous de **${current.name}** expirou.`);
+                }
+            }
+
+            // Decrement Slow Debuff
+            if (current.buffs.slowTurns > 0) {
+                current.buffs.slowTurns--;
+                if (current.buffs.slowTurns === 0) {
+                    current.def = current.baseDef;
+                    current.spd = current.baseSpd;
+                    logBattle(`🍯 O efeito do mel em **${current.name}** passou. Atributos restaurados.`);
+                }
+            }
+
+            updateUI();
+
+            // Check if Stunned
+            if (current.stunnedTurns > 0) {
+                current.stunnedTurns--;
+                logBattle(`💫 **${current.name}** está atordoado e perdeu este turno!`);
+                spawnFloatingText("ATORDOADO!", currentTurnIndex, '#FBBF24');
+                updateUI();
+
+                // Pass turn after short pause
+                turnTimer = setTimeout(() => {
+                    endTurn();
+                }, 1200);
+                return;
+            }
+
+            // Enable control / trigger AI
+            isAnimating = false;
+            updateUI();
+
+            if (gameMode === 'pve' && currentTurnIndex === 1) {
+                turnTimer = setTimeout(handleAITurn, 900);
+            }
+        }
+
+        function endTurn() {
+            if (turnTimer) clearTimeout(turnTimer);
+
+            // Toggle turn index strictly between 0 and 1
+            currentTurnIndex = 1 - currentTurnIndex;
+
+            // Increment round counter every 2 turns
+            roundCount++;
+            document.getElementById('roundCounter').innerText = Math.floor((roundCount - 1) / 2) + 1;
+
+            startTurn();
+        }
+
+        /* ================= BATTLE ACTIONS LOGIC ================= */
+        function performAttack(moveType) {
+            if (isAnimating) return;
+            // Prevent P1 from acting during AI turn
+            if (gameMode === 'pve' && currentTurnIndex === 1) return;
+
+            const attacker = players[currentTurnIndex];
+            const defender = players[1 - currentTurnIndex];
+            const attackerChar = CHARACTERS[attacker.id];
+            const move = attackerChar.moves[moveType];
+
+            // Cooldown check
+            if (moveType === 'alt' && attacker.altCd > 0) return;
+            if (moveType === 'special' && attacker.specCd > 0) return;
+
+            isAnimating = true;
+
+            // Set animation on appropriate card
+            const spriteElem = document.getElementById(currentTurnIndex === 0 ? 'p1SpriteContainer' : 'p2SpriteContainer');
+            spriteElem.classList.add(currentTurnIndex === 0 ? 'anim-attack-p1' : 'anim-attack-p2');
+            setTimeout(() => {
+                spriteElem.classList.remove('anim-attack-p1', 'anim-attack-p2');
+            }, 400);
+
+            // Set skill cooldowns
+            if (moveType === 'alt') attacker.altCd = move.cd || 3;
+            if (moveType === 'special') attacker.specCd = move.cd || 4;
+
+            // Roll for attack hit accuracy
+            const hitRoll = Math.random() * 100;
+            if (hitRoll > attacker.acc) {
+                playSound('hit');
+                logBattle(`❌ **${attacker.name}** usou **${move.name}**, mas o ataque ERROU!`);
+                spawnFloatingText("ERROU!", 1 - currentTurnIndex, '#9CA3AF');
+                
+                setTimeout(() => endTurn(), 1000);
+                return;
+            }
+
+            // Check Defender False Clone / Illusion Decoy
+            if (defender.buffs.decoy) {
+                defender.buffs.decoy = false;
+                playSound('magic');
+                logBattle(`🌀 **${attacker.name}** atacou a **Miragem Falsa** de **${defender.name}**! Ataque completamente absorvido.`);
+                spawnFloatingText("MIRAGEM!", 1 - currentTurnIndex, '#F4A261');
+                
+                setTimeout(() => endTurn(), 1000);
+                return;
+            }
+
+            // Calculate Base Damage & Modifiers
+            let finalDmg = 0;
+            let isCrit = false;
+
+            if (typeof move.dmg === 'number') {
+                let raw = move.dmg;
+
+                // Attack buff multiplier
+                if (attacker.buffs.atkBonus > 0) {
+                    raw *= (1 + attacker.buffs.atkBonus);
+                }
+
+                // Defense reduction scaling
+                let effDef = defender.def;
+                if (move.bypassDef) effDef *= (1 - move.bypassDef);
+
+                let damageReduction = effDef / (effDef + 250);
+                finalDmg = Math.max(12, Math.round(raw * (1 - damageReduction)));
+
+                // Critical hit calculation
+                if (Math.random() * 100 <= attacker.crit) {
+                    isCrit = true;
+                    finalDmg = Math.round(finalDmg * 1.75);
+                }
+            } else if (move.dmg === 'special_cataclysm') {
+                // Cataclysm: Exactly 50% opponent max HP
+                finalDmg = Math.round(defender.maxHp * 0.5);
+                playSound('cataclysm');
+            } else if (move.dmg === 'special_multi') {
+                // Multi-Portais: 4 to 6 punches
+                const hits = Math.floor(Math.random() * 3) + 4;
+                let total = 0;
+                for (let i = 0; i < hits; i++) {
+                    total += Math.floor(Math.random() * 21) + 45;
+                }
+                finalDmg = total;
+                playSound('magic');
+            } else if (move.dmg === 'special_hive') {
+                // Colmeia: Exactly 1/3 (33.3%) opponent max HP
+                finalDmg = Math.round(defender.maxHp * 0.333);
+                playSound('magic');
+            }
+
+            // Apply Status Effects & Buffs
+            if (move.stun) {
+                defender.stunnedTurns = move.stun;
+                logBattle(`💫 **${defender.name}** foi preso e ficará atordoado por 1 turno!`);
+            }
+            if (move.stunChance && Math.random() <= move.stunChance) {
+                defender.stunnedTurns = 1;
+                logBattle(`💫 **${defender.name}** foi paralisado pela Bola de Akuma!`);
+            }
+            if (move.buff && move.buff.type === 'attack') {
+                attacker.buffs.atkBonus = move.buff.amount;
+                attacker.buffs.atkTurns = move.buff.turns;
+                logBattle(`✨ **${attacker.name}** ativou Miraculous (+60% dano por 3 turnos)!`);
+                playSound('magic');
+            }
+            if (move.decoy) {
+                attacker.buffs.decoy = true;
+                logBattle(`🦊 **${attacker.name}** ativou um Clone Falso para absorver o próximo ataque!`);
+                playSound('magic');
+            }
+            if (move.akumaBuff) {
+                attacker.buffs.akumaTurns = move.akumaBuff;
+                attacker.buffs.atkBonus = 0.50;
+                logBattle(`😈 **${attacker.name}** invocou um servo Akumatizado (+50% Dano)!`);
+                playSound('cataclysm');
+            }
+            if (move.slow) {
+                defender.buffs.slowTurns = move.slow;
+                defender.def = Math.round(defender.baseDef * 0.7);
+                defender.spd = Math.round(defender.baseSpd * 0.7);
+                logBattle(`🍯 **${defender.name}** foi desacelerado por mel (-30% Defesa e Velocidade)!`);
+            }
+
+            // Apply calculated damage to target HP
+            defender.hp = Math.max(0, defender.hp - finalDmg);
+
+            // Visual feedback
+            triggerScreenShake();
+            if (isCrit) {
+                playSound('crit');
+                spawnFloatingText(`CRÍTICO! -${finalDmg}`, 1 - currentTurnIndex, '#EF4444');
+                logBattle(`💥 **GOLPE CRÍTICO!** **${attacker.name}** usou **${move.name}** causando **${finalDmg}** de dano!`);
+            } else if (finalDmg > 0) {
+                playSound('hit');
+                spawnFloatingText(`-${finalDmg}`, 1 - currentTurnIndex, '#F59E0B');
+                logBattle(`⚔️ **${attacker.name}** usou **${move.name}** causando **${finalDmg}** de dano.`);
+            } else {
+                playSound('magic');
+            }
+
+            updateUI();
+
+            // Check Knockout Victory
+            if (defender.hp <= 0) {
+                setTimeout(() => showVictory(attacker), 500);
+                return;
+            }
+
+            // End action and pass turn
+            setTimeout(() => {
+                endTurn();
+            }, 1000);
+        }
+
+        /* ================= AI BOT STRATEGY ENGINE ================= */
+        function handleAITurn() {
+            if (players[1].hp <= 0 || players[0].hp <= 0) return;
+
+            const aiPlayer = players[1];
+            let choice = 'basic';
+
+            if (aiDifficulty === 'easy') {
+                const rand = Math.random();
+                if (rand > 0.8 && aiPlayer.specCd === 0) choice = 'special';
+                else if (rand > 0.5 && aiPlayer.altCd === 0) choice = 'alt';
+                else choice = 'basic';
+            } else if (aiDifficulty === 'medium') {
+                if (aiPlayer.specCd === 0) choice = 'special';
+                else if (aiPlayer.altCd === 0) choice = 'alt';
+                else choice = 'basic';
+            } else if (aiDifficulty === 'hard') {
+                const player1 = players[0];
+                if (player1.hp < 250 && aiPlayer.altCd === 0) {
+                    choice = 'alt';
+                } else if (aiPlayer.specCd === 0) {
+                    choice = 'special';
+                } else if (aiPlayer.altCd === 0) {
+                    choice = 'alt';
+                } else {
+                    choice = 'basic';
+                }
+            }
+
+            performAttack(choice);
+        }
+
+        /* ================= UI RENDER & UPDATE ================= */
+        function updateUI() {
+            const p1 = players[0];
+            const p2 = players[1];
+            if (!p1.id || !p2.id) return;
+
+            // Header Indicator
+            const turnText = document.getElementById('turnIndicatorText');
+            if (currentTurnIndex === 0) {
+                turnText.innerText = `TURNO DO JOGADOR 1 (${p1.name})`;
+                turnText.className = "font-orbitron text-red-400 uppercase tracking-wider font-bold";
+                document.getElementById('p1Card').classList.add('ring-2', 'ring-red-500', 'shadow-neon-red');
+                document.getElementById('p2Card').classList.remove('ring-2', 'ring-indigo-500', 'shadow-neon-purple');
+            } else {
+                turnText.innerText = gameMode === 'pve' ? `TURNO DA IA (${p2.name})` : `TURNO DO JOGADOR 2 (${p2.name})`;
+                turnText.className = "font-orbitron text-indigo-400 uppercase tracking-wider font-bold";
+                document.getElementById('p2Card').classList.add('ring-2', 'ring-indigo-500', 'shadow-neon-purple');
+                document.getElementById('p1Card').classList.remove('ring-2', 'ring-red-500', 'shadow-neon-red');
+            }
+
+            // Health bar percentages
+            const p1Pct = Math.max(0, (p1.hp / p1.maxHp) * 100);
+            const p2Pct = Math.max(0, (p2.hp / p2.maxHp) * 100);
+
+            document.getElementById('p1HpBar').style.width = `${p1Pct}%`;
+            document.getElementById('p2HpBar').style.width = `${p2Pct}%`;
+            document.getElementById('p1HpText').innerText = `${p1.hp} / ${p1.maxHp}`;
+            document.getElementById('p2HpText').innerText = `${p2.hp} / ${p2.maxHp}`;
+
+            // Stat readouts
+            document.getElementById('p1DefVal').innerText = p1.def;
+            document.getElementById('p1SpdVal').innerText = p1.spd;
+            document.getElementById('p2DefVal').innerText = p2.def;
+            document.getElementById('p2SpdVal').innerText = p2.spd;
+
+            // Status badges
+            renderBadges('p1Badges', p1);
+            renderBadges('p2Badges', p2);
+
+            // Active combatant controls configuration
+            const activeState = players[currentTurnIndex];
+            const activeChar = CHARACTERS[activeState.id];
+
+            document.getElementById('activeTurnLabel').innerText = `COMANDOS: ${activeState.name}`;
+            document.getElementById('activeTurnLabel').style.color = activeChar.color;
+
+            // Move 1
+            document.getElementById('moveNameBasic').innerText = activeChar.moves.basic.name;
+            document.getElementById('moveDescBasic').innerText = activeChar.moves.basic.desc;
+
+            // Move 2
+            document.getElementById('moveNameAlt').innerText = activeChar.moves.alt.name;
+            document.getElementById('moveDescAlt').innerText = activeChar.moves.alt.desc;
+            const altCdBadge = document.getElementById('altCdBadge');
+            const btnAlt = document.getElementById('btnAltAttack');
+            if (activeState.altCd > 0) {
+                altCdBadge.classList.remove('hidden');
+                altCdBadge.innerText = `CD: ${activeState.altCd}`;
+                btnAlt.classList.add('opacity-40', 'cursor-not-allowed');
+            } else {
+                altCdBadge.classList.add('hidden');
+                btnAlt.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Move 3
+            document.getElementById('moveNameSpec').innerText = activeChar.moves.special.name;
+            document.getElementById('moveDescSpec').innerText = activeChar.moves.special.desc;
+            const specCdBadge = document.getElementById('specCdBadge');
+            const btnSpec = document.getElementById('btnSpecAttack');
+            if (activeState.specCd > 0) {
+                specCdBadge.classList.remove('hidden');
+                specCdBadge.innerText = `CD: ${activeState.specCd}`;
+                btnSpec.classList.add('opacity-40', 'cursor-not-allowed');
+            } else {
+                specCdBadge.classList.add('hidden');
+                btnSpec.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Disable command buttons when AI turn or animation is in progress
+            const controlsGroup = document.getElementById('attackButtonsGroup');
+            if ((gameMode === 'pve' && currentTurnIndex === 1) || isAnimating) {
+                controlsGroup.classList.add('pointer-events-none', 'opacity-60');
+            } else {
+                controlsGroup.classList.remove('pointer-events-none', 'opacity-60');
+            }
+        }
+
+        function renderBadges(containerId, state) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (state.stunnedTurns > 0) {
+                container.innerHTML += `<span class="status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-yellow-950 text-yellow-300 border border-yellow-500">💫 TONTURA</span>`;
+            }
+            if (state.buffs.atkTurns > 0) {
+                container.innerHTML += `<span class="status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-red-950 text-red-300 border border-red-500">✨ BUFF +60%</span>`;
+            }
+            if (state.buffs.decoy) {
+                container.innerHTML += `<span class="status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-950 text-amber-300 border border-amber-500">🦊 CLONE</span>`;
+            }
+            if (state.buffs.akumaTurns > 0) {
+                container.innerHTML += `<span class="status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-purple-950 text-purple-300 border border-purple-500">😈 AKUMA</span>`;
+            }
+            if (state.buffs.slowTurns > 0) {
+                container.innerHTML += `<span class="status-badge text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-950 text-amber-200 border border-amber-600">🍯 LENTO (-30%)</span>`;
+            }
+        }
+
+        function logBattle(text) {
+            const log = document.getElementById('battleLog');
+            const item = document.createElement('div');
+            item.className = 'text-[11px] leading-tight pb-1 border-b border-gray-800/40';
+            item.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+            log.prepend(item);
+        }
+
+        function showVictory(winner) {
+            if (turnTimer) clearTimeout(turnTimer);
+            playSound('victory');
+            document.getElementById('victoryTitle').innerText = `${winner.name.toUpperCase()} VENCEU!`;
+            document.getElementById('victoryDesc').innerText = `${winner.name} dominou a batalha no universo Miraculous Strong Fighter!`;
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        /* ================= CANVAS PARTICLES & FLOATING DAMAGE TEXT ================= */
+        let canvas, ctx;
+        let floatingTexts = [];
+
+        function setupCanvas() {
+            canvas = document.getElementById('fxCanvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function spawnFloatingText(text, playerIndex, color) {
+            const cardElem = document.getElementById(playerIndex === 0 ? 'p1Card' : 'p2Card');
+            if (!cardElem) return;
+            const rect = cardElem.getBoundingClientRect();
+
+            floatingTexts.push({
+                text: text,
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+                alpha: 1.0,
+                scale: 1.8,
+                color: color || '#FFF'
+            });
+        }
+
+        function triggerScreenShake() {
+            const body = document.body;
+            body.classList.add('shake-screen');
+            setTimeout(() => body.classList.remove('shake-screen'), 350);
+        }
+
+        function renderFX() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ctx.save();
+                ctx.globalAlpha = ft.alpha;
+                ctx.font = '900 28px Orbitron, sans-serif';
+                ctx.fillStyle = ft.color;
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 8;
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+
+                ft.y -= 1.5;
+                ft.alpha -= 0.02;
+
+                if (ft.alpha <= 0) {
+                    floatingTexts.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(renderFX);
+        }
+
+        requestAnimationFrame(renderFX);
+    </script>
+</body>
+</html>
